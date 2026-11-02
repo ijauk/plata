@@ -31,6 +31,7 @@ class KorisnikRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($korisnik)],
             'password' => [$korisnik ? 'nullable' : 'required', Password::min(8)],
             'is_admin' => ['boolean'],
+            'iskljuci_dvofaktorsku' => ['boolean'],
         ];
     }
 
@@ -43,6 +44,16 @@ class KorisnikRequest extends FormRequest
 
         if ($this->filled('password')) {
             $podaci['password'] = $this->input('password');
+        }
+
+        if ($this->boolean('iskljuci_dvofaktorsku')) {
+            $podaci = [
+                ...$podaci,
+                'two_factor_secret' => null,
+                'two_factor_recovery_codes' => null,
+                'two_factor_confirmed_at' => null,
+                'two_factor_last_timestamp' => null,
+            ];
         }
 
         return $podaci;

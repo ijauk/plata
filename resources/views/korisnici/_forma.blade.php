@@ -17,6 +17,12 @@
         <input type="checkbox" name="is_admin" value="1" style="width:auto" @checked(old('is_admin', $korisnik->is_admin)) @disabled($korisnik->is(auth()->user()))>
         Administrator (može dodavati korisnike)
     </label>
+    @if ($korisnik->imaDvofaktorsku())
+        <label style="display:flex; gap:8px; align-items:center; margin-top:12px">
+            <input type="checkbox" name="iskljuci_dvofaktorsku" value="1" style="width:auto">
+            Isključi dvofaktorsku prijavu (ako je korisnik izgubio mobitel i kodove za oporavak)
+        </label>
+    @endif
 </div>
 <div class="actions">
     <button class="btn primary" type="submit">Spremi</button>

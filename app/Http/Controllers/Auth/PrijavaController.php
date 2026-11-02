@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,10 +28,23 @@ class PrijavaController extends Controller
             'password.required' => 'Upiši lozinku.',
         ]);
 
-        if (! Auth::attempt($podaci, $request->boolean('zapamti'))) {
+        $korisnik = Auth::getProvider()->retrieveByCredentials(['email' => $podaci['email']]);
+
+        if (! $korisnik instanceof User || ! Auth::getProvider()->validateCredentials($korisnik, $podaci)) {
             throw ValidationException::withMessages(['email' => 'Pogrešan e-mail ili lozinka.']);
         }
 
+        if ($korisnik->imaDvofaktorsku()) {
+            $request->session()->put(DvofaktorskaPrijavaController::KLJUC_SESIJE, [
+                'id' => $korisnik->id,
+                'zapamti' => $request->boolean('zapamti'),
+                'istjece' => now()->addMinutes(5)->getTimestamp(),
+            ]);
+
+            return redirect()->route('prijava.kod');
+        }
+
+        Auth::login($korisnik, $request->boolean('zapamti'));
         $request->session()->regenerate();
 
         return redirect()->intended(route('obracuni.index'));

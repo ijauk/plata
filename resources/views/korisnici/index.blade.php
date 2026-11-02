@@ -25,7 +25,7 @@
                 <tr>
                     <td><strong>{{ $korisnik->name }}</strong></td>
                     <td>{{ $korisnik->email }}</td>
-                    <td>{{ $korisnik->is_admin ? 'administrator' : 'korisnik' }}</td>
+                    <td>{{ $korisnik->is_admin ? 'administrator' : 'korisnik' }}@if ($korisnik->imaDvofaktorsku()) <span class="muted">· 2FA</span>@endif</td>
                     <td class="n">{{ $korisnik->obracuni_count }}</td>
                     <td>
                         @if ($korisnik->postavke_count > 0)

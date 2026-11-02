@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ObracunRequest;
 use App\Models\Obracun;
+use App\Models\Postavka;
 use App\Services\OsobniOdbitak;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -41,14 +44,16 @@ class ObracunController extends Controller
 
     public function show(Obracun $obracun): View
     {
-        $postavka = $obracun->postavka();
+        return view('obracuni.show', $this->podaciPrikaza($obracun));
+    }
 
-        return view('obracuni.show', [
-            'obracun' => $obracun,
-            'postavka' => $postavka,
-            'rezultat' => $obracun->izracun(),
-            'odbitak' => OsobniOdbitak::stavke($postavka->parametri($obracun->period), $obracun->period),
-        ]);
+    /**
+     * Platni listić obračuna kao PDF za preuzimanje.
+     */
+    public function pdf(Obracun $obracun): Response
+    {
+        return Pdf::loadView('obracuni.pdf', $this->podaciPrikaza($obracun))
+            ->download('listic-'.$obracun->period->format('Y-m').'.pdf');
     }
 
     public function edit(Obracun $obracun): View
@@ -68,5 +73,21 @@ class ObracunController extends Controller
         $obracun->delete();
 
         return redirect()->route('obracuni.index')->with('status', "Obračun za {$obracun->oznaka} je obrisan.");
+    }
+
+    /**
+     * @return array{obracun: Obracun, postavka: Postavka, rezultat: array<string, mixed>, prethodniMjesec: array{bruto: float, sati: float, izvor: string}|null, odbitak: list<array{naziv: string, koeficijent: float}>}
+     */
+    private function podaciPrikaza(Obracun $obracun): array
+    {
+        $postavka = $obracun->postavka();
+
+        return [
+            'obracun' => $obracun,
+            'postavka' => $postavka,
+            'rezultat' => $obracun->izracun(),
+            'prethodniMjesec' => $obracun->prethodniMjesec(),
+            'odbitak' => OsobniOdbitak::stavke($postavka->parametri($obracun->period), $obracun->period),
+        ];
     }
 }

@@ -36,6 +36,19 @@ class Obracun extends Model
     ];
 
     /**
+     * Gdje se sati pojedine vrste nalaze na platnoj listi (odjeljak VI i šifra u rekapitulaciji).
+     *
+     * @var array<string, string>
+     */
+    public const SATI_NA_LISTICU = [
+        'sati_redovan' => '2.1 redoviti rad · VP 001',
+        'sati_blagdan' => '3.3 blagdani i neradni dani · VP 008',
+        'sati_dopust' => '3.9 plaćeni dopust · VP 013',
+        'sati_godisnji' => '3.1 godišnji odmor · VP 068',
+        'sati_bolovanje' => '3.2 bolovanje na teret poslodavca · VP 020',
+    ];
+
+    /**
      * Prethodni mjesec, ako je već učitan (izbjegava ponovne upite pri obračunu niza).
      */
     public ?Obracun $ucitaniPrethodni = null;
@@ -85,12 +98,12 @@ class Obracun extends Model
     /**
      * Bruto i sati prethodnog mjeseca: ručni unos ima prednost, zatim stvarni bruto s platne liste, pa izračun.
      *
-     * @return array{bruto: float, sati: float}|null
+     * @return array{bruto: float, sati: float, izvor: string}|null
      */
     public function prethodniMjesec(): ?array
     {
         if ($this->prethodni_bruto !== null && $this->prethodni_sati) {
-            return ['bruto' => $this->prethodni_bruto, 'sati' => $this->prethodni_sati];
+            return ['bruto' => $this->prethodni_bruto, 'sati' => $this->prethodni_sati, 'izvor' => 'ručno upisano u ovom obračunu'];
         }
 
         $prethodni = $this->prethodni();
@@ -101,6 +114,9 @@ class Obracun extends Model
         return [
             'bruto' => $prethodni->stvarni_bruto ?? $prethodni->izracun()['bruto'],
             'sati' => $prethodni->ukupnoSati(),
+            'izvor' => $prethodni->stvarni_bruto !== null
+                ? "stvarni bruto s platne liste {$prethodni->oznaka}"
+                : "izračunati bruto za {$prethodni->oznaka}",
         ];
     }
 
@@ -113,8 +129,8 @@ class Obracun extends Model
 
     public function ukupnoSati(): float
     {
-        return $this->sati_redovan + $this->sati_blagdan + $this->sati_dopust + $this->sati_godisnji
-            + $this->sati_bolovanje + $this->ostalo_sati;
+        return (float) ($this->sati_redovan + $this->sati_blagdan + $this->sati_dopust + $this->sati_godisnji
+            + $this->sati_bolovanje + $this->ostalo_sati);
     }
 
     public function postavka(): Postavka
@@ -130,9 +146,9 @@ class Obracun extends Model
     {
         return [
             ...array_map(fn (string $polje): float => (float) $this->{$polje}, array_combine(array_keys(self::SATI), array_keys(self::SATI))),
-            'ucinak' => $this->ucinak,
-            'ostalo_bruto' => $this->ostalo_bruto,
-            'ostalo_sati' => $this->ostalo_sati,
+            'ucinak' => (float) $this->ucinak,
+            'ostalo_bruto' => (float) $this->ostalo_bruto,
+            'ostalo_sati' => (float) $this->ostalo_sati,
             'satnica_prethodna' => $this->satnicaPrethodna(),
         ];
     }

@@ -40,6 +40,8 @@
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 16px; }
         label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+        label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pomoc { font-size: 12px; color: var(--muted); margin-top: 3px; }
         input, select, textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--text); font: inherit; }
         input.changed { border-color: var(--accent); background: var(--accent-soft); }
         .status { background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
@@ -53,6 +55,7 @@
         @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
         a { color: var(--accent); }
     </style>
+    @stack('stilovi')
 </head>
 <body>
 <header>
@@ -90,5 +93,6 @@
     @endif
     @yield('sadrzaj')
 </main>
+@stack('skripte')
 </body>
 </html>

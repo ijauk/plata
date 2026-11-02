@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Dvofaktorska;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
@@ -9,9 +10,14 @@ use Illuminate\View\View;
 
 class ProfilController extends Controller
 {
-    public function edit(): View
+    public function edit(Request $request, Dvofaktorska $dvofaktorska): View
     {
-        return view('profil.edit');
+        $korisnik = $request->user();
+        $uPostavljanju = $korisnik->two_factor_secret !== null && ! $korisnik->imaDvofaktorsku();
+
+        return view('profil.edit', [
+            'qrKod' => $uPostavljanju ? $dvofaktorska->qrKod($korisnik) : null,
+        ]);
     }
 
     public function update(Request $request): RedirectResponse

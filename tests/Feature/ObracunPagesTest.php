@@ -30,11 +30,29 @@ class ObracunPagesTest extends TestCase
 
         $this->get(route('obracuni.index'))->assertOk()->assertSee('9/2026')->assertSee('1.679,99');
         $this->get(route('obracuni.show', $obracun))->assertOk()->assertSee('Za isplatu')->assertSee('1.679,99');
-        $this->get(route('obracuni.create'))->assertOk()->assertSee('2026-10');
-        $this->get(route('obracuni.edit', $obracun))->assertOk();
+        $this->get(route('obracuni.create'))->assertOk()->assertSee('2026-10')->assertSee('3.3 blagdani i neradni dani · VP 008');
+        $this->get(route('obracuni.edit', $obracun))->assertOk()
+            ->assertSee('<input type="hidden" name="period" id="period" value="2026-09"', false)
+            ->assertSee('data-mjesec-birac="period"', false)
+            ->assertSee('tempus-dominus@6.10.4/dist/locales/hr.js', false);
         $this->get(route('postavke.index'))->assertOk()->assertSee('399,51');
         $this->get(route('postavke.create'))->assertOk();
         $this->get(route('simulator'))->assertOk()->assertSee('Simulator');
+    }
+
+    public function test_listic_se_preuzima_kao_pdf(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $obracun = Obracun::query()->orderByDesc('period')->firstOrFail();
+
+        $this->get(route('obracuni.show', $obracun))->assertSee(route('obracuni.pdf', $obracun));
+
+        $odgovor = $this->get(route('obracuni.pdf', $obracun))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertDownload('listic-2026-09.pdf');
+
+        $this->assertStringStartsWith('%PDF-', $odgovor->getContent());
     }
 
     public function test_novi_obracun_preuzima_satnicu_prethodnog_mjeseca(): void

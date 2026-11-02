@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PragmaRX\Google2FA\Google2FA;
 
 /**
  * @extends Factory<User>
@@ -41,6 +42,18 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_admin' => true,
+        ]);
+    }
+
+    /**
+     * Korisnik s uključenom dvofaktorskom prijavom.
+     */
+    public function dvofaktorska(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'two_factor_secret' => app(Google2FA::class)->generateSecretKey(),
+            'two_factor_recovery_codes' => ['aaaaa-bbbbb', 'ccccc-ddddd'],
+            'two_factor_confirmed_at' => now(),
         ]);
     }
 

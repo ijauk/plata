@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Obracun;
+use App\Models\Postavka;
 use App\Models\User;
 use App\Services\KalkulatorPlace;
 use Database\Seeders\DatabaseSeeder;
@@ -91,5 +92,41 @@ class KalkulatorPlaceTest extends TestCase
             'sati_redovan' => 160, 'sati_blagdan' => 0, 'sati_dopust' => 0, 'sati_godisnji' => 16, 'sati_bolovanje' => 0,
             'ucinak' => 20, 'ostalo_bruto' => 0, 'ostalo_sati' => 0, 'satnica_prethodna' => null,
         ]);
+    }
+
+    public function test_drugi_korisnik_bez_sindikata_s_bolovanjem(): void
+    {
+        $korisnica = User::factory()->create();
+        Postavka::factory()->for($korisnica)->create([
+            'vrijedi_od' => '2026-06-01',
+            'koeficijent' => 7.811,
+            'minuli_rad' => 15.5,
+            'sindikat_spiv' => 0,
+            'spiv_hto' => 0,
+        ]);
+
+        Obracun::factory()->for($korisnica)->create([
+            'period' => '2026-08-01', 'sati_redovan' => 152, 'sati_blagdan' => 8, 'sati_bolovanje' => 8, 'ucinak' => 15,
+            'prethodni_bruto' => 4481.58, 'prethodni_sati' => 184, 'stvarni_bruto' => 4111.04, 'stvarna_isplata' => 2868.05,
+        ]);
+        $rujan = Obracun::factory()->for($korisnica)->create([
+            'period' => '2026-09-01', 'sati_redovan' => 160, 'sati_godisnji' => 8, 'sati_bolovanje' => 8, 'ucinak' => 10,
+            'stvarni_bruto' => 4137.61, 'stvarna_isplata' => 2882.60,
+        ]);
+        $kolovoz = $korisnica->obracuni()->whereDate('period', '2026-08-01')->firstOrFail();
+
+        $this->assertSame(
+            ['001' => 3148.55, '008' => 194.85, '020' => 175.36, '030' => 120.0, '301' => 472.28],
+            array_column($kolovoz->izracun()['stavke'], 'iznos', 'sifra'),
+        );
+        $this->assertSame(63.20, $kolovoz->izracun()['topli_obrok']);
+        $this->assertEqualsWithDelta(2868.05, $kolovoz->izracun()['isplata'], 0.011, 'MIO I. stup se kod poslodavca ponekad zaokružuje drukčije');
+
+        $this->assertSame(
+            ['001' => 3314.26, '068' => 195.76, '020' => 176.16, '030' => 120.0, '301' => 331.43],
+            array_column($rujan->izracun()['stavke'], 'iznos', 'sifra'),
+        );
+        $this->assertSame('stvarni bruto s platne liste 8/2026', $rujan->prethodniMjesec()['izvor']);
+        $this->assertSame(2882.60, $rujan->izracun()['isplata']);
     }
 }

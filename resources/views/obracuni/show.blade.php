@@ -6,6 +6,7 @@
     <div class="actions">
         <h1 style="margin:0; flex:1">Obračun za {{ $obracun->oznaka }}</h1>
         <a class="btn" href="{{ route('simulator', ['obracun' => $obracun->id]) }}">Simuliraj</a>
+        <a class="btn" href="{{ route('obracuni.pdf', $obracun) }}">PDF</a>
         <a class="btn" href="{{ route('obracuni.edit', $obracun) }}">Uredi</a>
         <form method="POST" action="{{ route('obracuni.destroy', $obracun) }}" onsubmit="return confirm('Obrisati obračun {{ $obracun->oznaka }}?')">
             @csrf
@@ -49,6 +50,11 @@
                 <table>
                     <tr><td>Redovna satnica</td><td class="n">@broj($rezultat['satnica']) €</td></tr>
                     <tr><td>Satnica prethodnog mjeseca <span class="muted">(blagdani, dopust, GO)</span></td><td class="n">{{ $rezultat['satnica_prethodna'] !== null ? \Illuminate\Support\Number::format($rezultat['satnica_prethodna'], maxPrecision: 4, locale: 'hr').' €' : '—' }}</td></tr>
+                    @if ($prethodniMjesec)
+                        <tr><td colspan="2" class="muted" style="white-space:normal">
+                            = @eur($prethodniMjesec['bruto']) € / @broj($prethodniMjesec['sati']) h – {{ $prethodniMjesec['izvor'] }}
+                        </td></tr>
+                    @endif
                     <tr><td>Satnica bolovanja</td><td class="n">{{ $rezultat['satnica_bolovanja'] !== null ? \Illuminate\Support\Number::format($rezultat['satnica_bolovanja'], precision: 2, locale: 'hr').' €' : '—' }}</td></tr>
                 </table>
             </div>

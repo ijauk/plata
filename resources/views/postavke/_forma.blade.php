@@ -2,8 +2,8 @@
 <div class="panel">
     <div class="grid">
         <div>
-            <label for="vrijedi_od">Vrijedi od (mjesec)</label>
-            <input type="month" id="vrijedi_od" name="vrijedi_od" value="{{ old('vrijedi_od', $postavka->vrijedi_od?->format('Y-m')) }}" required>
+            <label for="vrijedi_od_birac">Vrijedi od (mjesec)</label>
+            <x-mjesec name="vrijedi_od" :value="old('vrijedi_od', $postavka->vrijedi_od?->format('Y-m'))" required />
         </div>
         @foreach (\App\Models\Postavka::PARAMETRI as $kljuc => $naziv)
             <div>
