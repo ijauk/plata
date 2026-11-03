@@ -53,7 +53,6 @@
                     const birac = new td.TempusDominus(polje, {
                         defaultDate: pocetni,
                         useCurrent: false,
-                        allowInputToggle: true,
                         display: {
                             theme: 'auto',
                             viewMode: 'months',
